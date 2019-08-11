@@ -5,12 +5,16 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PigBlockQueue {
+/**
+ * create by FengyiTu at 2019.8.9
+ */
+
+public class PigBlockQueue<T> {
     private static final String TAG = "PigBlockQueue";
     /**
      * 队列中的容器，用来放队列的元素
      */
-    private final List<String> list = new ArrayList<>();
+    private final List<T> list = new ArrayList<>();
     /**
      * 队列的最大容量值
      */
@@ -45,7 +49,7 @@ public class PigBlockQueue {
      * @param t the element to add
      * @throws InterruptedException if interrupted while waiting
      */
-    public void put(String t) throws InterruptedException {
+    public void put(T t) throws InterruptedException {
         synchronized (object) {
             Log.d(TAG,"put");
             while (size == maxSize && isValid) {
@@ -63,8 +67,8 @@ public class PigBlockQueue {
      * @return the head of this queue
      * @throws InterruptedException if interrupted while waiting
      */
-    public String take() throws InterruptedException {
-        String t;
+    public T take() throws InterruptedException {
+        T t;
         synchronized (object) {
             Log.d(TAG,"take");
             while (size == 0 && isValid) {
@@ -72,7 +76,7 @@ public class PigBlockQueue {
             }
             if (!isValid){
                 object.notify();
-                return "";
+                return null;
             }
             t = list.remove(0);
             size--;
@@ -82,33 +86,38 @@ public class PigBlockQueue {
     }
 
 
-    public void removeElementByEqual(String string) {
-        synchronized (object) {
-            Log.d(TAG, "remove by equal");
-            while (true) {
-                if (!list.remove(string)){
-                    break;
-                }else{
-                    //成功删除
-                    size--;
+    public void removeElementByEqual(T string) {
+        if(string instanceof String) {
+            synchronized (object) {
+                Log.d(TAG, "remove by equal");
+                while (true) {
+                    if (!list.remove(string)) {
+                        break;
+                    } else {
+                        //成功删除
+                        size--;
+                    }
                 }
+                object.notify();
             }
-            object.notify();
         }
     }
 
-    public void removeElementByContains(String string) {
-        synchronized (object) {
-            Log.d(TAG, "remove by contains");
+    public void removeElementByContains(T string) {
+
+        if (string instanceof String) {
+            synchronized (object) {
+                Log.d(TAG, "remove by contains");
 //            while (true){
-            for (int i = list.size() - 1; i >= 0; i--) {
-                if (list.get(i).contains(string)) {
-                    list.remove(i);
-                    size--;
+                for (int i = list.size() - 1; i >= 0; i--) {
+                    if ((((String)list.get(i)).contains((String)string))){
+                        list.remove(i);
+                        size--;
+                    }
                 }
-            }
 //            }
-            object.notify();
+                object.notify();
+            }
         }
     }
 

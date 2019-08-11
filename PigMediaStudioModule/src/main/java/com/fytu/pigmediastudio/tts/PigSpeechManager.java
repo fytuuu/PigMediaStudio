@@ -2,15 +2,15 @@ package com.fytu.pigmediastudio.tts;
 
 import android.content.Context;
 
-import java.util.Locale;
 
+/**
+ * create by FengyiTu at 2019.8.9
+ */
 public class PigSpeechManager {
 
     private static PigSpeechManager instance;
-//    private static  List<TextToSpeech> textToSpeeches = new ArrayList<>();
-    private static PigTTSController ttsController;
-    //private int playMode;//我们只需要flush add只要在监听后再读就好
-    private static ContextManager contextManager;
+    private static PigTTSController pigTTSController;
+    private static PigContextManager pigContextManager;
 
     private PigSpeechManager(){
         //初始化
@@ -25,19 +25,26 @@ public class PigSpeechManager {
         if (instance == null){
             instance = new PigSpeechManager();
         }
-        if (contextManager == null || context != contextManager.getApplicationContext() || contextManager.getApplicationContext() == null) {
-            contextManager = new ContextManager(context);
+        if (pigContextManager == null || context != pigContextManager.getApplicationContext() || pigContextManager.getApplicationContext() == null) {
+            pigContextManager = new PigContextManager(context);
         }
         return instance;
     }
 
 
-    public PigTTSController getReader(){//提前准备好
-        if (ttsController == null){
-            ttsController =  new PigTTSController(contextManager.getApplicationContext());
+    public PigReader getReader(){//提前准备好
+        if (pigTTSController == null){
+            pigTTSController =  new PigTTSController(pigContextManager.getApplicationContext());
         }
-        ttsController.initRead();
-        return ttsController;
+        return pigTTSController.getReader();
+    }
+
+
+    public PigTranslater getTranslater(){
+        if (pigTTSController == null){
+            pigTTSController =  new PigTTSController(pigContextManager.getApplicationContext());
+        }
+        return pigTTSController.getTranslater();
     }
 
 
