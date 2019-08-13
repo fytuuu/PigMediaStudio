@@ -40,13 +40,4 @@ public class PigTTSController {
         return pigTranslater;
     }
 
-
-
-
-
-
-
-
-
-
 }

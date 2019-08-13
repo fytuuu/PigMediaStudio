@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * create by FengyiTu at 2019.8.10
@@ -56,7 +57,7 @@ public class PigTranslater{
 
     public interface OnTranslateProgressListener {
         void onStart();
-        void onComplete(String fileAbsolutePath);
+        void onComplete(String text,String fileAbsolutePath);
         void onError(String error);
     }
 
@@ -126,56 +127,6 @@ public class PigTranslater{
         return pigTranslater;
     }
 
-
-//    private void initTextToWav(int maxPoolSize){
-//        if (isWriteDenied()){
-//            Log.w(TTS_TTW_FLAG,"write permission denied");
-//        }else {
-//            if (!isTTWbegin) {
-//                isTTWbegin = true;
-//
-//
-//                thread_ttw = new Thread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        while (isValid2) {
-//                            if (freePool.size() > 0) {
-//                                //先判断是否有可用的
-//                                TextToSpeech ttsForWav = ttsMap.get(freePool.get(0));
-//                                if (ttsForWav == null) {
-//
-//                                } else {
-//                                    HashMap<String, String> map = new HashMap<>();
-//                                    map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, freePool.get(0));
-//                                    try {
-//                                        PigTextForWav pigTTW = pigFileBlockQueue.take();
-//                                        ttsForWav.synthesizeToFile(pigTTW.getText(),
-//                                                map,
-//                                                Environment.getExternalStorageDirectory().getAbsolutePath() + parentPath + pigTTW.getFileName());
-//                                        freePool.remove(0);
-//                                    } catch (InterruptedException e) {
-//                                        e.printStackTrace();
-//                                    }
-//
-//                                }
-//                            } else if (ttsMap.size() < freePoolMaxSize) {
-//                                //如果没有可用的，已存在的tts又不足3个，直接创建一个新的tts
-//                                try {
-//                                    startTextToWave(pigFileBlockQueue.take());
-//                                } catch (InterruptedException e) {
-//                                    e.printStackTrace();
-//                                }
-//                            } else {
-//                                //有3个都在工作中，等待它们空闲
-//                            }
-//                        }
-//
-//                    }
-//                });
-//                thread_ttw.start();
-//            }
-//        }
-//    }
     private void initTextToWav(){
         if (isWriteDenied()){
             Log.w(TTS_TTW_FLAG,"write permission denied");
@@ -196,10 +147,46 @@ public class PigTranslater{
                                     HashMap<String, String> map = new HashMap<>();
                                     map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, freePool.get(0));
                                     try {
-                                        PigTextForWav pigTTW = pigFileBlockQueue.take();
+                                        final PigTextForWav pigTTW = pigFileBlockQueue.take();
+                                        if (wavSpeed != 0f)ttsForWav.setSpeechRate(wavSpeed);
+                                        if (wavPitch!= 0f)ttsForWav.setPitch(wavPitch);
+                                        if (loc != Locale.CHINA)ttsForWav.setLanguage(loc);
                                         ttsForWav.synthesizeToFile(pigTTW.getText(),
                                                 map,
                                                 Environment.getExternalStorageDirectory().getAbsolutePath() + parentPath + pigTTW.getFileName());
+
+                                        ttsForWav.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                                            @Override
+                                            public void onStart(String utteranceId) {
+                                                Log.d(TTS_TTW_FLAG,"a ttsForWav started with utterance Id"+utteranceId);
+                                                if (null != onTranslateProgressListener){
+                                                    onTranslateProgressListener.onStart();
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onDone(String utteranceId) {
+                                                Log.d(TTS_TTW_FLAG,"a ttsForWav onDone with utterance Id"+utteranceId);
+                                                onTtsForWavFree(utteranceId);
+
+                                                if (null != onTranslateProgressListener){
+                                                    onTranslateProgressListener.onComplete(pigTTW.getText(),Environment.getExternalStorageDirectory().getAbsolutePath()+parentPath+pigTTW.getFileName());
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onError(String utteranceId) {
+
+                                            }
+
+                                            @Override
+                                            public void onError(String utteranceId,int errorCode) {
+                                                Log.d(TTS_TTW_FLAG,"a ttsForWav onError with utterance Id"+utteranceId+" and errorcode is"+errorCode);
+                                                onError(utteranceId);
+                                            }
+                                        });
+
+
                                         freePool.remove(0);
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
@@ -268,6 +255,9 @@ public class PigTranslater{
                 HashMap<String, String> map = new HashMap<>();
                 String utteranceId = "UtteranceId"+System.currentTimeMillis();
                 map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
+                if (wavSpeed != 0f)ttsForWav.setSpeechRate(wavSpeed);
+                if (wavPitch!= 0f)ttsForWav.setPitch(wavPitch);
+                if (loc != Locale.CHINA)ttsForWav.setLanguage(loc);
                 ttsForWav.synthesizeToFile(pigTTW.getText(),
                         map,
                         Environment.getExternalStorageDirectory().getAbsolutePath()+parentPath+pigTTW.getFileName());
@@ -287,14 +277,19 @@ public class PigTranslater{
                         onTtsForWavFree(utteranceId);
 
                         if (null != onTranslateProgressListener){
-                            onTranslateProgressListener.onComplete(Environment.getExternalStorageDirectory().getAbsolutePath()+parentPath+pigTTW.getFileName());
+                            onTranslateProgressListener.onComplete(pigTTW.getText(),Environment.getExternalStorageDirectory().getAbsolutePath()+parentPath+pigTTW.getFileName());
                         }
                     }
 
                     @Override
                     public void onError(String utteranceId) {
-                        Log.d(TTS_TTW_FLAG,"a ttsForWav onError with utterance Id"+utteranceId);
 
+                    }
+
+                    @Override
+                    public void onError(String utteranceId,int errorCode) {
+                        Log.d(TTS_TTW_FLAG,"a ttsForWav onError with utterance Id"+utteranceId+" and errorcode is"+errorCode);
+                        onError(utteranceId);
                     }
                 });
                 isTtsProduceSuccess = true;
@@ -307,6 +302,37 @@ public class PigTranslater{
         if (freePool.size()< freePoolMaxSize && ttsMap.get(freeUtteranceId)!= null){
             freePool.add(freeUtteranceId);
         }
+    }
+
+    /*   wav速度 */
+    private float wavSpeed;
+    /*   wav音高 ,默认1,0f */
+    private float wavPitch;
+    /*   wav语言 ,默认汉语 */
+    private Locale loc = Locale.CHINA;
+
+    /**
+     * 设置wav速度，设置后，只能改变pool中的值
+     */
+    public PigTranslater setWavSpeed(float wavSpeed){
+        this.wavSpeed = wavSpeed;
+        return pigTranslater;
+    }
+
+    /**
+     * 设置wav音高
+     */
+    public PigTranslater setWavPitch(float wavPitch){
+        this.wavPitch = wavPitch;
+        return pigTranslater;
+    }
+
+    /**
+     * 设置wav语言
+     */
+    public PigTranslater setWavLanguage(Locale loc){
+        this.loc = loc;
+        return pigTranslater;
     }
 }
 

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
+import android.widget.ResourceCursorAdapter;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -77,6 +78,12 @@ public class PigReader{
                     Log.d(TTS_READ_FLAG,"utter onError！！！");
                     isReadFinish = true;
                 }
+                @Override
+                public void onError(String utteranceId,int errorCode) {
+                    Log.d(TTS_READ_FLAG,"a ttsForWav onError with utterance Id"+utteranceId+" and errorcode is"+errorCode);
+                    onError(utteranceId);
+                }
+
             });
 
             isValid = true;
@@ -251,4 +258,11 @@ public class PigReader{
         }
     }
 
+
+    public PigReader addSpeech(String text,String filePath){
+        if (ttsForRead!=null) {
+            ttsForRead.addSpeech(text, filePath);
+        }
+        return pigReader;
+    }
 }
