@@ -33,7 +33,10 @@ int result = PigSoundPlayer.getLoader(getApplicationContext()).load(filePath,1);
 ```
 
 
-then you may call ``int streamID = PigSoundPlayer.play(fileName,1.0f,1.0f,1,0,1.0f)`` to play target sound stream.
+then you may call play() to play target sound stream.
+```java
+int streamID = PigSoundPlayer.play(fileName,1.0f,1.0f,1,0,1.0f)
+``` 
 
 also you may pause one of them by calling 
 ```java
@@ -63,7 +66,9 @@ PigSpeechManager.in(getApplicationContext()).getReader().readNow(str);
 ```
 
 #### transform text to .wav file
-before transforming, you'd better check the ``<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>`` permission
+before transforming, you'd better check the write permission
+``<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>`` 
+
 ```java
 PigSpeechManager.in(getApplicationContext()).getTranslater().setWavSpeed(1.0f).put(fileName,text);
 ```
@@ -85,3 +90,11 @@ PigSpeechManager.in(context).getTranslater().setParentPath("test").setOnTranslat
 
 }
 ```
+
+Blog site:
+开发PigMediaStudio依赖库过程记录（一）
+https://blog.csdn.net/weixin_43093006/article/details/98993551
+开发PigMediaStudio依赖库过程记录（二）
+https://blog.csdn.net/weixin_43093006/article/details/99355667
+
+
