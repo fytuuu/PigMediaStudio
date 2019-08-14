@@ -92,9 +92,13 @@ PigSpeechManager.in(context).getTranslater().setParentPath("test").setOnTranslat
 ```
 
 Blog site:
+
 开发PigMediaStudio依赖库过程记录（一）
+
 https://blog.csdn.net/weixin_43093006/article/details/98993551
+
 开发PigMediaStudio依赖库过程记录（二）
+
 https://blog.csdn.net/weixin_43093006/article/details/99355667
 
 
